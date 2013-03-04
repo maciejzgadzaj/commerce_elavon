@@ -1,4 +1,4 @@
-name = Commerce Elavon 
+name = Commerce Elavon
 description = Implements Elavon Virtual Merchant with Drupal Commerce.
 package = Commerce (contrib)
 dependencies[] = commerce

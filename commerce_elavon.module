@@ -15,7 +15,6 @@ define('ELAVON_TXN_MODE_TEST', 'test');
 function commerce_elavon_commerce_payment_transaction_status_info() {
   $statuses = array();
 
-  // COMMERCE_PAYMENT_STATUS_CANCELED is a constant defined in the Elavon module.
   $statuses[COMMERCE_PAYMENT_STATUS_CANCELED] = array(
     'status' => COMMERCE_PAYMENT_STATUS_CANCELED,
     'title' => t('Canceled'),
@@ -47,6 +46,9 @@ function commerce_elavon_menu() {
   return $items;
 }
 
+/**
+ * Implement call back function commerce_elavon_capture_access().
+ */
 function commerce_elavon_capture_access($order, $transaction) {
   // Return FALSE if the transaction isn't for Elavon or isn't awaiting capture.
   if ($transaction->remote_status == 'Fail' || $transaction->status != COMMERCE_PAYMENT_STATUS_PENDING) {
@@ -186,8 +188,6 @@ function commerce_elavon_direct_submit_form_validate($payment_method, $pane_form
 
 /**
  * Payment method callback: checkout form submission - Direct.
- *
- * @see TransactServices.svc/ProcessCreditCard - Sale (Transaction API Guide)
  */
 function commerce_elavon_direct_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   $billing_data = commerce_elavon_get_billing_info($order);
@@ -248,7 +248,7 @@ function commerce_elavon_get_log_message($response, $type) {
   $message = array(
     $status,
     $avs ? t('AVS response: @avs', array('@avs' => commerce_elavon_avs_response($avs))) : '',
-    $cvv ? t('CVV match: @cvv', array('@cvv' => commerce_elavon_cvv_response($cvv))): '',
+    $cvv ? t('CVV match: @cvv', array('@cvv' => commerce_elavon_cvv_response($cvv))) : '',
   );
 
   return $message;
@@ -272,7 +272,7 @@ function commerce_elavon_get_billing_info($order) {
   );
 
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  if ($order_wrapper->commerce_customer_billing->value()){
+  if ($order_wrapper->commerce_customer_billing->value()) {
     $ext_data = '';
     $billing_address = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
 
@@ -332,6 +332,7 @@ function commerce_elavon_server_url($txn_mode, $txn_elavon_type) {
   switch ($txn_mode) {
     case ELAVON_TXN_MODE_PRODUCTION:
       return 'https://www.myvirtualmerchant.com/VirtualMerchant/processxml.do';
+
     case ELAVON_TXN_MODE_TEST:
       return 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/processxml.do';
   }
@@ -348,7 +349,6 @@ function commerce_elavon_request($payment_method, $info = array()) {
   $url = commerce_elavon_server_url($payment_method['settings']['txn_mode'], $payment_method['settings']['txn_elavon_type']);
   // Add the default name-value pairs to the array.
   $info += array(
-    // API credentials
     'ssl_merchant_id' => $payment_method['settings']['accountid'],
     'ssl_user_id' => $payment_method['settings']['userid'],
     'ssl_pin' => $payment_method['settings']['pin'],
@@ -514,7 +514,7 @@ function commerce_elavon_cvv_response($code) {
  * Implements hook_commerce_kickstart_service_provider().
  */
 function commerce_elavon_commerce_kickstart_service_provider() {
-  $description = t('This module is about integrating the Elavon payment gateway with Drupal Commerce and the Commerce Card-on-File framework'). '<br /><br />';
+  $description = t('This module is about integrating the Elavon payment gateway with Drupal Commerce and the Commerce Card-on-File framework') . '<br /><br />';
   $description .= '<b>' . t('Your own virtual POS') . '</b><br />';
   $description .= t('Accept card payments face-to-face, over the phone, through the mail, or recurring, with a Elavon virtual point-of-sale terminal to meet your business needs.') . '<br /><br />';
   $description .= '<b>' . t('eCommerce Solutions') . '</b><br />';
@@ -541,12 +541,12 @@ function commerce_elavon_commerce_kickstart_service_provider() {
 }
 
 /**
- * commerce kickstart service provider requirements callback method.
+ * Commerce kickstart service provider requirements callback method.
  */
 function commerce_elavon_commerce_kickstart_requirements_status() {
   $settings = array(
-    'direct' => null,
-    'recurring' => null,
+    'direct' => NULL,
+    'recurring' => NULL,
   );
 
   // Checking the rules configuration for verification of the services defining.
@@ -563,7 +563,6 @@ function commerce_elavon_commerce_kickstart_requirements_status() {
       $settings['recurring'] = $action->settings;
     }
   }
-  //return ture;
   // Checking if one of the rules is defined.
   return (isset($settings['direct']['payment_method']['settings']) && is_array($settings['direct']['payment_method']['settings'])) || (isset($settings['recurring']['payment_method']['settings']) && is_array($settings['recurring']['payment_method']['settings'])) ? COMMERCE_KICKSTART_SERVICE_PROVIDER_MODULE_DEFINED : COMMERCE_KICKSTART_SERVICE_PROVIDER_MODULE_ENABLED;
 }

@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_requirements().
+ * Implements hook_requirements().
  *
  * Ensures users have cURL enabled prior to installation.
  */

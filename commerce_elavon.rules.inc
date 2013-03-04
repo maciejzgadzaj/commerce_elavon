@@ -65,7 +65,7 @@ function commerce_elavon_rules_capture_pending($order, $transaction = FALSE) {
     $payments[0]->commerce_payment_transaction_status = $transaction->$transaction_id;
   }
   else {
-    $payments =  views_get_view_result('commerce_payment_order', 'defaults', $order->order_id);
+    $payments = views_get_view_result('commerce_payment_order', 'defaults', $order->order_id);
   }
 
   // Process all transactions.
@@ -92,7 +92,7 @@ function commerce_elavon_rules_cancel_capture($order, $transaction = FALSE) {
     $payments[0]->commerce_payment_transaction_status = $transaction->$transaction_id;
   }
   else {
-    $payments =  views_get_view_result('commerce_payment_order', 'defaults', $order->order_id);
+    $payments = views_get_view_result('commerce_payment_order', 'defaults', $order->order_id);
   }
 
   // Process all transactions.
