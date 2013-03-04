@@ -1,5 +1,5 @@
 name = Commerce Elavon 
-description = Implements Elavon payment services for use with Drupal Commerce.
+description = Implements Elavon Virtual Merchant with Drupal Commerce.
 package = Commerce (contrib)
 dependencies[] = commerce
 dependencies[] = commerce_ui
@@ -12,7 +12,4 @@ files[] = commerce_elavon.module
 
 ; Includes
 files[] = includes/commerce_elavon.admin.inc
-
-; Simple tests
-files[] = tests/commerce_elavon.test
 

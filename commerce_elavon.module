@@ -8,25 +8,6 @@
 // Elavon transaction mode definitions:
 define('ELAVON_TXN_MODE_PRODUCTION', 'production');
 define('ELAVON_TXN_MODE_TEST', 'test');
-// Elavon request type definitions:
-define('ELAVON_TXN_TYPE_DIRECT_CAPTURE', 'direct_capture');
-define('ELAVON_TXN_TYPE_DELAYED_CAPTURE', 'delayed_capture');
-define('ELAVON_TXN_TYPE_ADDRECURRINGCREDITCARD', 'add_recurring_credit_card');
-define('ELAVON_TXN_TYPE_RECURRING_CAPTURE', 'recurring_capture');
-define('ELAVON_TXN_TYPE_MANAGECREDITCARDINFO', 'manage_credit_card_info');
-define('ELAVON_TXN_TYPE_MANAGECUSTOMER', 'manage_customer');
-define('ELAVON_TXN_TYPE_MANAGECONTRACT', 'manage_contract');
-define('ELAVON_TXN_TYPE_VOID', 'void');
-define('ELAVON_TXN_TYPE_FORCE', 'force');
-
-
-/**
- * Implements hook_enable().
- */
-function commerce_elavon_enable() {
-  // Make the card on file option checked by default.
-  variable_set('commerce_cardonfile_storage', 'opt-out');
-}
 
 /**
  * Implements hook_commerce_payment_transaction_status_info().
@@ -68,7 +49,7 @@ function commerce_elavon_menu() {
 
 function commerce_elavon_capture_access($order, $transaction) {
   // Return FALSE if the transaction isn't for Elavon or isn't awaiting capture.
-  if ($transaction->payment_method != ELAVON_TXN_TYPE_DELAYED_CAPTURE || $transaction->remote_status == 'Fail' || $transaction->status != COMMERCE_PAYMENT_STATUS_PENDING) {
+  if ($transaction->remote_status == 'Fail' || $transaction->status != COMMERCE_PAYMENT_STATUS_PENDING) {
     return FALSE;
   }
   // TODO: Check if this is relevant to elavon.
@@ -168,7 +149,7 @@ function commerce_elavon_base_settings_form($settings) {
 
   $form['log'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Log the following messages for debugging'),
+    '#title' => t('Log the following messages for debugging. Thoese messages are credit and transaction information. Keep it off for production site.'),
     '#options' => array(
       'request' => t('API request messages'),
       'response' => t('API response messages'),
@@ -214,17 +195,6 @@ function commerce_elavon_direct_submit_form_submit($payment_method, $pane_form, 
     'ssl_card_number' => $pane_values['credit_card']['number'],
     'ssl_exp_date' => $pane_values['credit_card']['exp_month'] . substr($pane_values['credit_card']['exp_year'], 2, 2),
   );
-  // Define correct transaction type delayed or direct.
-  switch ($payment_method['settings']['txn_type']) {
-    case COMMERCE_CREDIT_AUTH_CAPTURE:
-      $payment_method['settings']['txn_elavon_type'] = ELAVON_TXN_TYPE_DIRECT_CAPTURE;
-      $info['ssl_transaction_type'] = 'ccsale';
-      break;
-    case COMMERCE_CREDIT_AUTH_ONLY:
-      $payment_method['settings']['txn_elavon_type'] = ELAVON_TXN_TYPE_DELAYED_CAPTURE;
-      $info['TransType'] = 'Auth';
-      break;
-  }
   if (isset($pane_values['credit_card']['code'])) {
     $info['CVNum'] = $pane_values['credit_card']['code'];
   }
@@ -256,33 +226,6 @@ function commerce_elavon_direct_submit_form_submit($payment_method, $pane_form, 
 function commerce_elavon_transaction_process($payment_method, $info, $order, $charge) {
   // Submit the request to Elavon.
   $response = commerce_elavon_request($payment_method, $info);
-  // Prepare a transaction object to log the API response.
-
-/*
-  $transaction = commerce_payment_transaction_new($payment_method['settings']['txn_elavon_type'], $order->order_id);
-  $transaction->instance_id = $payment_method['instance_id'];
-  $transaction->transaction_id = isset($response['xml']->ssl_txn_id) ? (string) $response['xml']->ssl_txn_id : '';
-  //$transaction->remote_id = isset($response['xml']->PNRef) ? (string) $response['xml']->PNRef : '';
-  $transaction->amount = $charge['amount'];
-  $transaction->currency_code = $charge['currency_code'];
-  $transaction->payload[REQUEST_TIME] = isset($response['xml']) ? $response['xml']->asXML() : '';
-  // Store the Message of transaction in the remote status.
-  $transaction->remote_status = $response['status'];
-  $transaction->message = implode('<br />', commerce_elavon_get_log_message($response, $payment_method['settings']['txn_elavon_type']));
-  // Set the transaction status based on the type of transaction this was.
-  if ($response['status']) {
-    $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
-  }
-  else {
-    $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
-  }
-  // If we didn't get an approval response code.
-  // Create a failed transaction with the error message.
-  // Save auth code.
-  $transaction->data['auth_code'][] = isset($response['xml']) && isset($response['xml']->ssl_approval_code) ? (string) $response['xml']->ssl_approval_code : '';
-  // Save the transaction information.
-  commerce_payment_transaction_save($transaction);
-*/
   // If the payment failed, display an error and rebuild the form.
   if (!$response['status']) {
     drupal_set_message(t('We received the following error processing your card. Please enter you information again or try a different card.'), 'error');
@@ -388,10 +331,8 @@ function commerce_elavon_get_billing_info($order) {
 function commerce_elavon_server_url($txn_mode, $txn_elavon_type) {
   switch ($txn_mode) {
     case ELAVON_TXN_MODE_PRODUCTION:
-      //return 'https://secure1.elavon.com/' . $service;
       return 'https://www.myvirtualmerchant.com/VirtualMerchant/processxml.do';
     case ELAVON_TXN_MODE_TEST:
-      //return 'https://uat.elavon.com/' . $service;
       return 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/processxml.do';
   }
 }
@@ -438,6 +379,8 @@ function commerce_elavon_request($payment_method, $info = array()) {
 
     watchdog('commerce_elavon', 'Elavon request to @url: !param', array('@url' => $url, '!param' => '<pre>' . check_plain(print_r($log_nvp, TRUE)) . '</pre>'), WATCHDOG_DEBUG);
   }
+
+  // Prepare xml for Elavon.
   $xmldata = "xmldata=<txn>";
   $xmldata .= "<ssl_merchant_id>" . $info['ssl_merchant_id'] . "</ssl_merchant_id>";
   $xmldata .= "<ssl_user_id>" . $info['ssl_user_id'] . "</ssl_user_id>";
