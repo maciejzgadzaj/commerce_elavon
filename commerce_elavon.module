@@ -392,7 +392,6 @@ function commerce_elavon_request($payment_method, $info = array()) {
   $xmldata .= "<ssl_exp_date>" . $info['ssl_exp_date'] . "</ssl_exp_date>";
   $xmldata .= "<ssl_invoice_number>" . $info['InvNum'] . "</ssl_invoice_number>";
   $xmldata .= "<ssl_amount>" . $info['ssl_amount'] . "</ssl_amount></txn>";
-
   // Setup the cURL request.
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
@@ -527,7 +526,7 @@ function commerce_elavon_commerce_kickstart_service_provider() {
 
   return array(
     'commerce_elavon' => array(
-      'logo_path' => 'http://wulei.ca/sites/default/files/wuinfo7.png',
+      'logo_path' => 'http://wulei.ca/wuinfo.png',
       'title' => t('Commerce Elavon'),
       'category' => t('Payment providers'),
       'teaser' => t('This module is about integrating the Elavon payment gateway with Drupal Commerce and the Commerce Card-on-File framework.'),
