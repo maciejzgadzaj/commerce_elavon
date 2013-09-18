@@ -8,6 +8,7 @@
 // Elavon transaction mode definitions:
 define('ELAVON_TXN_MODE_PRODUCTION', 'production');
 define('ELAVON_TXN_MODE_TEST', 'test');
+define('ELAVON_PAYMENT_STATUS_CANCELED', 'canceled');
 
 /**
  * Implements hook_commerce_payment_transaction_status_info().
@@ -15,8 +16,8 @@ define('ELAVON_TXN_MODE_TEST', 'test');
 function commerce_elavon_commerce_payment_transaction_status_info() {
   $statuses = array();
 
-  $statuses[COMMERCE_PAYMENT_STATUS_CANCELED] = array(
-    'status' => COMMERCE_PAYMENT_STATUS_CANCELED,
+  $statuses[ELAVON_PAYMENT_STATUS_CANCELED] = array(
+    'status' => ELAVON_PAYMENT_STATUS_CANCELED,
     'title' => t('Canceled'),
     'total' => FALSE,
   );
