@@ -329,7 +329,7 @@ function commerce_elavon_get_billing_info($order) {
  * @return
  *   The URL to use to submit requests to the Elavon server.
  */
-function commerce_elavon_server_url($txn_mode, $txn_elavon_type) {
+function commerce_elavon_server_url($txn_mode) {
   switch ($txn_mode) {
     case ELAVON_TXN_MODE_PRODUCTION:
       return 'https://www.myvirtualmerchant.com/VirtualMerchant/processxml.do';
@@ -347,7 +347,7 @@ function commerce_elavon_server_url($txn_mode, $txn_elavon_type) {
  */
 function commerce_elavon_request($payment_method, $info = array()) {
   // Get the API endpoint URL for the method's transaction mode and type.
-  $url = commerce_elavon_server_url($payment_method['settings']['txn_mode'], $payment_method['settings']['txn_elavon_type']);
+  $url = commerce_elavon_server_url($payment_method['settings']['txn_mode']);
   // Add the default name-value pairs to the array.
   $info += array(
     'ssl_merchant_id' => $payment_method['settings']['accountid'],
@@ -363,8 +363,9 @@ function commerce_elavon_request($payment_method, $info = array()) {
   if ($payment_method['settings']['log']['request'] == 'request') {
     // Mask the credit card number and CVV.
     $log_nvp = $info;
-    $log_nvp['Username'] = str_repeat('X', strlen($log_nvp['Username']));
-    $log_nvp['Password'] = str_repeat('X', strlen($log_nvp['Password']));
+    $log_nvp['ssl_merchant_id'] = str_repeat('X', strlen($log_nvp['ssl_merchant_id']));
+    $log_nvp['ssl_user_id'] = str_repeat('X', strlen($log_nvp['ssl_user_id']));
+    $log_nvp['ssl_pin'] = str_repeat('X', strlen($log_nvp['ssl_pin']));
 
     if (!empty($log_nvp['CardNum'])) {
       $log_nvp['CardNum'] = str_repeat('X', strlen($log_nvp['CardNum']) - 4) . substr($log_nvp['CardNum'], -4);
