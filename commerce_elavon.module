@@ -152,7 +152,7 @@ function commerce_elavon_base_settings_form($settings) {
 
   $form['log'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Log the following messages for debugging. Thoese messages are credit and transaction information. Keep it off for production site.'),
+    '#title' => t('Log the following messages for debugging. These messages are credit and transaction information. Keep it off for production site.'),
     '#options' => array(
       'request' => t('API request messages'),
       'response' => t('API response messages'),
@@ -204,6 +204,31 @@ function commerce_elavon_direct_submit_form_submit($payment_method, $pane_form, 
   $info += array(
     'ssl_amount' => commerce_currency_amount_to_decimal($charge['amount'], $charge['currency_code']),
     'MagData' => '',
+  );
+
+  // Set Tax amount
+  $sales_tax_total = 0;
+  // Loop through and get all tax elements and add them up
+  $order_working_array = $order->commerce_order_total['und'][0]['data']['components'];
+  foreach($order_working_array as $id => $order_working_array_element) {
+	  if(strpos($order_working_array_element['name'], 'tax') !== FALSE) {
+		  $sales_tax_total += $order_working_array_element['price']['amount'];
+	  }
+  }
+  $ssl_salestax = commerce_currency_amount_to_decimal($sales_tax_total, $charge['currency_code']);
+
+  $card_name_parts = explode(' ', $billing_data['name_on_card']);
+  $card_name_array['first_name'] = array_shift($card_name_parts);
+  $card_name_array['last_name'] = implode(' ', $card_name_parts);
+
+  $info += array(
+    'ssl_avs_address' => $billing_data['street'],
+    'ssl_avs_zip' => $billing_data['zip'],
+    'ssl_first_name' => $card_name_array['first_name'],
+    'ssl_last_name' => $card_name_array['last_name'],
+    'ssl_transaction_type' => 'ccsale',
+    'ssl_cvv2cvc2' => $pane_values['credit_card']['code'],
+    'ssl_salestax' => $ssl_salestax,
   );
 
   // Add additional transaction information to the request array.
@@ -393,7 +418,14 @@ function commerce_elavon_request($payment_method, $info = array()) {
   $xmldata .= "<ssl_card_number>" . $info['ssl_card_number'] . "</ssl_card_number>";
   $xmldata .= "<ssl_exp_date>" . $info['ssl_exp_date'] . "</ssl_exp_date>";
   $xmldata .= "<ssl_invoice_number>" . $info['InvNum'] . "</ssl_invoice_number>";
-  $xmldata .= "<ssl_amount>" . $info['ssl_amount'] . "</ssl_amount></txn>";
+  $xmldata .= "<ssl_amount>" . $info['ssl_amount'] . "</ssl_amount>";
+  $xmldata .= "<ssl_avs_address>" . $info['ssl_avs_address'] . "</ssl_avs_address>";
+  $xmldata .= "<ssl_avs_zip>" . $info['ssl_avs_zip'] . "</ssl_avs_zip>";
+  $xmldata .= "<ssl_first_name>" . $info['ssl_first_name'] . "</ssl_first_name>";
+  $xmldata .= "<ssl_last_name>" . $info['ssl_last_name'] . "</ssl_last_name>";
+  $xmldata .= "<ssl_salestax>" . $info['ssl_salestax'] . "</ssl_salestax></txn>";
+
+
   // Setup the cURL request.
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
