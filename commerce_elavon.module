@@ -9,6 +9,7 @@
 define('ELAVON_TXN_MODE_PRODUCTION', 'production');
 define('ELAVON_TXN_MODE_TEST', 'test');
 define('ELAVON_PAYMENT_STATUS_CANCELED', 'canceled');
+define('ELAVON_TXN_TYPE_DIRECT_CAPTURE', 'direct_capture');
 
 /**
  * Implements hook_commerce_payment_transaction_status_info().
@@ -252,6 +253,31 @@ function commerce_elavon_direct_submit_form_submit($payment_method, $pane_form, 
 function commerce_elavon_transaction_process($payment_method, $info, $order, $charge) {
   // Submit the request to Elavon.
   $response = commerce_elavon_request($payment_method, $info);
+
+  // Prepare a transaction object to log the API response.
+  $transaction = commerce_payment_transaction_new(ELAVON_TXN_TYPE_DIRECT_CAPTURE, $order->order_id);
+  $transaction->instance_id = $payment_method['instance_id'];
+  $transaction->remote_id = isset($response['xml']->PNRef) ? (string) $response['xml']->PNRef : '';
+  $transaction->amount = $charge['amount'];
+  $transaction->currency_code = $charge['currency_code'];
+  $transaction->payload[REQUEST_TIME] = isset($response['xml']) ? $response['xml']->asXML() : '';
+  // Store the Message of transaction in the remote status.
+  $transaction->remote_status = $response['status'];
+  $transaction->message = implode('<br />', commerce_elavon_get_log_message($response, ELAVON_TXN_TYPE_DIRECT_CAPTURE));
+  // Set the transaction status based on the type of transaction this was.
+  if ($response['status']) {
+    $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+  }
+  else {
+    $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
+  }
+  // If we didn't get an approval response code.
+  // Create a failed transaction with the error message.
+  // Save auth code.
+  $transaction->data['auth_code'][] = isset($response['xml']) && isset($response['xml']->AuthCode) ? (string) $response['xml']->AuthCode : '';
+  // Save the transaction information.
+  commerce_payment_transaction_save($transaction);
+
   // If the payment failed, display an error and rebuild the form.
   if (!$response['status']) {
     drupal_set_message(t('We received the following error processing your card. Please enter you information again or try a different card.'), 'error');
