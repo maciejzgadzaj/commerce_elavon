@@ -65,7 +65,6 @@ function commerce_elavon_capture_access($order, $transaction) {
   return commerce_payment_transaction_access('update', $transaction);
 }
 
-
 /**
  * Implements hook_commerce_payment_method_info().
  */
@@ -357,11 +356,11 @@ function commerce_elavon_get_billing_info($order) {
     $ext_data .= '</BillTo></Invoice>';
 
     $billing_data['ext_data'] = $ext_data;
-    $billing_data['street'] = substr($billing_address['thoroughfare'], 0, 60);
-    $billing_data['street2'] = substr($billing_address['premise'], 0, 60);
-    $billing_data['city'] = substr($billing_address['locality'], 0, 40);
-    $billing_data['state'] = substr($billing_address['administrative_area'], 0, 40);
-    $billing_data['zip'] = substr($billing_address['postal_code'], 0, 20);
+    $billing_data['street'] = substr($billing_address['thoroughfare'], 0, 30);
+    $billing_data['street2'] = substr($billing_address['premise'], 0, 30);
+    $billing_data['city'] = substr($billing_address['locality'], 0, 30);
+    $billing_data['state'] = substr($billing_address['administrative_area'], 0, 30);
+    $billing_data['zip'] = substr($billing_address['postal_code'], 0, 9);
     $billing_data['country'] = $billing_address['country'];
     $billing_data['name_on_card'] = $name_on_card;
     $billing_data['first_name'] = $billing_address['first_name'];
@@ -579,14 +578,14 @@ function commerce_elavon_commerce_kickstart_service_provider() {
   $description .= '<b>' . t('eCommerce Solutions') . '</b><br />';
   $description .= t('Safe, secure credit card payments for all eCommerce environments, including customizable hosted payment pages or integration through our easy-to-use API’s.') . '<br /><br />';
   $description .= '<b>' . t('Secure Technology') . '</b><br />';
-  $description .= t('Adaptive solutions aimed at keeping your data safe, we provide secure payment forms utilizing LeapLock™ technology and customer data storage with tokenization.');
+  $description .= t('Adaptive solutions aimed at keeping your data safe. ');
 
   $installation = t('1. Go to admin -> modules and enable commerce elavon module.') . '<br />';
   $installation .= t('2. Under site configuration -> Workflow you can see 2 elavon rules. Choose your method and define as needed');
 
   return array(
     'commerce_elavon' => array(
-      'logo_path' => 'http://wulei.ca/wuinfo.png',
+      'logo_path' => 'http://wulei.ca/sites/wulei.ca/themes/wulei/logo.png',
       'title' => t('Commerce Elavon'),
       'category' => t('Payment providers'),
       'teaser' => t('This module is about integrating the Elavon payment gateway with Drupal Commerce and the Commerce Card-on-File framework.'),
