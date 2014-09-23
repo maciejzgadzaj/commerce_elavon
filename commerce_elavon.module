@@ -417,8 +417,8 @@ function commerce_elavon_request($payment_method, $info = array()) {
     $log_nvp['ssl_user_id'] = str_repeat('X', strlen($log_nvp['ssl_user_id']));
     $log_nvp['ssl_pin'] = str_repeat('X', strlen($log_nvp['ssl_pin']));
 
-    if (!empty($log_nvp['CardNum'])) {
-      $log_nvp['CardNum'] = str_repeat('X', strlen($log_nvp['CardNum']) - 4) . substr($log_nvp['CardNum'], -4);
+    if (!empty($log_nvp['ssl_card_number'])) {
+      $log_nvp['ssl_card_number'] = str_repeat('X', strlen($log_nvp['ssl_card_number']) - 4) . substr($log_nvp['ssl_card_number'], -4);
     }
 
     if (!empty($log_nvp['CcAccountNum'])) {
