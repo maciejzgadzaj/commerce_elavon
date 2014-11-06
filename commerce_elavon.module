@@ -437,7 +437,8 @@ function commerce_elavon_request($payment_method, $info = array()) {
   $xmldata .= "<ssl_merchant_id>" . $info['ssl_merchant_id'] . "</ssl_merchant_id>";
   $xmldata .= "<ssl_user_id>" . $info['ssl_user_id'] . "</ssl_user_id>";
   $xmldata .= "<ssl_pin>" . $info['ssl_pin'] . "</ssl_pin>";
-  $xmldata .= "<ssl_test_mode>false</ssl_test_mode>";
+  $test_mode = ($payment_method['settings']['txn_mode'] == ELAVON_TXN_MODE_TEST) ? 'true' : 'false';
+  $xmldata .= "<ssl_test_mode>" . $test_mode . "</ssl_test_mode>";
   $xmldata .= "<ssl_transaction_type>ccsale</ssl_transaction_type>";
   $xmldata .= "<ssl_cvv2cvc2>" . $info['CVNum'] . "</ssl_cvv2cvc2>";
   $xmldata .= "<ssl_card_number>" . $info['ssl_card_number'] . "</ssl_card_number>";
